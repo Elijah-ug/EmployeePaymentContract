@@ -25,7 +25,6 @@ export default function Home() {
         <p className="mb-4">The employee acknowledges the assigned task</p>
         <p className="mb-4">He does the task and marks it as complete</p>
         <p className="mb-4">Then he waits for verification and the pay</p>
-    {/* <button className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">Check</button> */}
 </div>
       </div>
       </div>

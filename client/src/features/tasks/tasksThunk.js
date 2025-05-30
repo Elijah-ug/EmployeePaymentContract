@@ -2,12 +2,12 @@
 import { getContract } from "../../utils/contract"
 export const fetchAllEmployeeTasks = createAsyncThunk(
     "tasks/fetchAllEmployeeTasks",
-    async (employeeAddress, { rejectWithValue }) => {
+    async (_, { rejectWithValue }) => {
         try {
             const contract = await getContract();
-            console.log("employeeAddress: ", contract)
+
             const [_ids, _descriptions, _employees, _amounts, _completes, _funded, _checked] =
-                await contract.getAllEmployeeTasks(employeeAddress);
+                await contract.getAllTasks();
             const tasks = _ids.map((id, index) => ({
                 taskId: Number(id),
                 descriptions: _descriptions[index],
@@ -17,7 +17,6 @@ export const fetchAllEmployeeTasks = createAsyncThunk(
                 isFunded: _funded[index],
                 isChecked: _checked[index]
             }))
-            console.log("employeeAddress: ", tasks)
              return tasks
         } catch (error) {
             return rejectWithValue(error.message);

@@ -13,7 +13,7 @@ export default function ConnectWallet() {
               className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 cursor-pointer"
          >Connect Wallet</button>)}
       <div className="text-sm text-white">
-        {address && (<p> Account: <span className="text-blue-400">{address.slice(0, 6)}...{address.slice(-4)}</span></p>)}
+        {address && (<p> Account: <span className="text-blue-400">{address.slice(0, 7)}...{address.slice(-5)}</span></p>)}
       </div>
     </div>
   )

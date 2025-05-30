@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useDispatch } from 'react-redux'
-import { createTaskThunk } from '../../thunks/taskThunks';
+import { createTaskThunk } from '../../features/thunks/taskThunks';
 
 export default function TaskForm() {
     const dispatch = useDispatch();

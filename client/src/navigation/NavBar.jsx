@@ -9,6 +9,7 @@ export default function NavBar() {
               <NavLink to="/">Home</NavLink>
               <NavLink to="employees">Employees</NavLink>
               <NavLink to="tasks">Tasks</NavLink>
+              <NavLink to="your-tasks">Your Tasks</NavLink>
               <NavLink to="create">Create A task</NavLink>
           </div>
 
