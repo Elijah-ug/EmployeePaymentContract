@@ -7,14 +7,13 @@ export const fetchEmployeeList = createAsyncThunk(
         try {
             const contract = await getContract();
             const [ids, addresses, balances] = await contract.getAllEmployees();
-            const tx = await contract.getAllEmployees();
             const employeeList = ids.map((id, idx) => ({
                 employeeId: Number(id),
                 employeeAddress: addresses[idx],
                 employeeBalances: balances[idx].toString(),
               }));
             // const employeeList = tx.map((emp) => console.log("Address: ", emp.employeeAddress))
-            // console.log("🧑‍💼 Employee List from contract:", employeeList);
+            console.log("🧑‍💼 Employee List from contract:", employeeList);
             return employeeList;
         } catch (error) {
             console.error("❌ Error fetching employees", error);

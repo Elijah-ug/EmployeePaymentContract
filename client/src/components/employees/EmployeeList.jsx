@@ -12,19 +12,18 @@ export default function EmployeeList() {
     console.log("EmployeeList: ", employeeList)
   }, [dispatch])
 
-
   return (
     <div>
-      <h2>Employees</h2>
-      {employeeList && (<h3>{ employeeList.length}</h3> )}
+      <h2 className="text-center text-lg text-white">Employees</h2>
+      <div>{employeeList.length > 0 ? (<h3 className="text-center text-xl text-white">{ employeeList.length} Employees</h3> ) : (null)}</div>
       <div className="mx-44 grid grid-cols-1 sm:grid-cols-2 gap-4">
-         {employeeList && (
+         {employeeList.length > 0 ? (
           employeeList.map((employee, index) =>
-            <div>
-              <EmployeeCard key={index} employeeId={index + 1} employeeAddress={employee.employeeAddress}
+            <div key={index}>
+              <EmployeeCard  employeeId={index + 1} employeeAddress={employee.employeeAddress}
                 employeeBalances={formatEther(employee.employeeBalances)} />
               </div>)
-        )}
+        ): (<h1 className="text-center text-xl text-white my-20"><span>No Employees yet</span></h1> )}
 
       </div>
     </div>

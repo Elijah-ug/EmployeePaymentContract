@@ -16,17 +16,18 @@ export default function TaskList() {
     <div>
       <h2 className="text-white text-center my-4 text-lg">Task List</h2>
       <div className="mx-44 grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {tasks && (
+        {tasks.length > 0? (
           tasks.map((task, index) => <TaskCard
             key={index}
             descriptions={task.descriptions}
             employee={task.employee}
-            isChecked={task.isChanged}
+            isChecked={task.isChecked}
             isCompleted={task.isCompleted}
             isFunded = {task.isFunded}
-            taskId = {task.taskId}
+            taskId={task.taskId}
+            amount = {task.amount}
           />)
-        )}
+        ): (<h1 className="text-white text-center my-4 text-xl">No Tasks Yet</h1> )}
       </div>
     </div>
   )

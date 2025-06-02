@@ -15,8 +15,8 @@ contract EmployeePayment{
     }
     uint256 public newTaskId;
     Task[] public tasks;
-    Task[] public employeesTasks;
-    mapping(uint256 => Task) public employeeTasks;
+    // Task[] public employeesTasks;
+    mapping(address => uint256[]) private employeeToTaskIds;
     mapping(uint256 => Task) public completed;
     uint256 public numOfEmployeeTasks;
     //employee state
@@ -66,12 +66,13 @@ function createTask(string memory _description, address _employee, uint256 _amou
         taskId: newTaskId, description: _description, employee: _employee,
         amount: _amount, isCompleted: false, isFunded: false, isChecked: false});
     tasks.push(newTask);
+    employeeToTaskIds[_employee].push(newTaskId);
 
     bool isFound = false;
     for(uint i = 0; i < employeeList.length; i++){
         if(employeeList[i].employeeAddress == _employee){
             employeeList[i].employeeBalances += _amount;
-            employeesTasks.push(newTask);
+            // employeesTasks.push(newTask);
             numOfEmployeeTasks ++;
             isFound = true;
             break;
@@ -87,7 +88,7 @@ function createTask(string memory _description, address _employee, uint256 _amou
 
 //employee acknowledges and does the task
 function employeeToDoTask(uint256 taskId) external onlyAssignedEmployee(taskId) {
-   Task memory newTask = tasks[taskId];
+   Task storage newTask = tasks[taskId];
    newTask.isCompleted = true;
    completed[taskId] = newTask;
    emit TaskCompleted(taskId, msg.sender);
@@ -95,15 +96,22 @@ function employeeToDoTask(uint256 taskId) external onlyAssignedEmployee(taskId) 
 
 // leader verifies that the task is done
 function verificationOfEmployeeTaskCompletion(uint256 _taskId) external onlyOwnerOrEmployeeLeader(){
+    require(tasks[_taskId].isCompleted, "Task not yet completed");
     require(!tasks[_taskId].isChecked, "Task not completed!");
+
     tasks[_taskId].isChecked = true;
     emit TaskVerified(_taskId, msg.sender);
 }
 //fundTask by the employer
 function fundEmployeeForTaskCompletion( uint256 taskId, uint256 _amount) external payable onlyOwner(){
-    require(newTaskId < tasks.length, "Invalid task id");
-    require(!tasks[taskId].isFunded, "Task already funded");
+    require(taskId < tasks.length, "Invalid task id");
+    Task storage task = tasks[taskId];
+    require(task.isCompleted, "Task not completed yet");
+    require(task.isChecked, "Task not checked");
+    require(!task.isFunded, "Task already funded");
     require(msg.value == _amount, "Invalid amount");
+
+
 
     address empAddress = tasks[taskId].employee;
     bool isFound = false;
@@ -151,31 +159,33 @@ function getAllTasks() external view returns(
 //returning tasks of a specific employee
 function getAllEmployeeTasks() external view returns(
     uint256[] memory _ids, string[] memory _descriptions, address[] memory _employees, uint256[] memory _amounts,
-     bool[] memory _completes, bool[] memory _funded, bool[] memory _checked ){
-        uint256 quantity = employeesTasks.length;
-        // initializing each array with the length of the parent
-        _ids = new uint256[](quantity);
-        _descriptions = new string[](quantity);
-        _employees = new address[](quantity);
-        _amounts = new uint256[](quantity);
-        _completes = new bool[](quantity);
-        _funded = new bool[](quantity);
-        _checked = new bool[](quantity);
+     bool[] memory _completes, bool[] memory _funded, bool[] memory _checked ) {
 
-        for(uint256 i = 0; i < quantity; i++){
-            // pull out the full struct
-            Task memory task = employeesTasks[i];
-            //populate each returned arrays by by extracting struct fields
-            _ids[i] = task.taskId;
-            _descriptions[i] = task.description;
-            _employees[i]= task.employee;
-            _amounts[i] = task.amount;
-            _completes[i] = task.isCompleted;
-            _funded[i] = task.isFunded;
-            _checked[i] = task.isChecked;
-        }
+    uint256[] memory taskIds = employeeToTaskIds[msg.sender];
+    uint256 quantity = taskIds.length;
+
+    _ids = new uint256[](quantity);
+    _descriptions = new string[](quantity);
+    _employees = new address[](quantity);
+    _amounts = new uint256[](quantity);
+    _completes = new bool[](quantity);
+    _funded = new bool[](quantity);
+    _checked = new bool[](quantity);
+
+    for (uint256 i = 0; i < quantity; i++) {
+        Task memory task = tasks[taskIds[i]];
+        _ids[i] = task.taskId;
+        _descriptions[i] = task.description;
+        _employees[i] = task.employee;
+        _amounts[i] = task.amount;
+        _completes[i] = task.isCompleted;
+        _funded[i] = task.isFunded;
+        _checked[i] = task.isChecked;
+    }
+
     return (_ids, _descriptions, _employees, _amounts, _completes, _funded, _checked);
 }
+
 function getAllEmployees() external view returns(
     uint256[] memory ids, address[] memory addresses, uint256[] memory balances){
         uint256 len = employeeList.length;

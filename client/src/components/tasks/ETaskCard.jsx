@@ -15,7 +15,11 @@ export default function ETaskCard() {
     if (tasks) {
       dispatch(fetchAllTasksOfEmployee());
       }
-    }, [dispatch]);
+  }, [dispatch]);
+
+  const handleMarkComplete = (taskId) => {
+    dispatch(fetchEmployeeToDoTask(taskId))
+  }
   console.log("address: ", address);
   console.log("Tasks: ", employeeTasks);
   return (
@@ -25,14 +29,14 @@ export default function ETaskCard() {
               {
                   employeeTasks.map((task, index) =>
                 //   {task.employee == address &&(
-                      <div className='bg-green-500 p-5 rounded' key={index}>
+                      <div className={`bg-green-500 p-5 rounded ${task.isCompleted? "bg-red-300 text-gray-500":""}`} key={index}>
                         <p>Assignee: { task.employee}</p>
                         <p>Description: {task.descriptions}</p>
-                        <p>Completed Status: { task.isCompleted ? "Completed" : "Pending"}</p>
-                        <p>Checked Status: {task.isChecked ? "Checked" : "Not Checked" }</p>
-                          <p>Funded Status: {task.isFunded ? "Funded" : "Not Funded"}</p>
+                        <p>Completed Status: { task.isCompleted ? "✅ Completed" : "Pending"}</p>
+                        <p>Checked Status: {task.isChecked ? "✅ Checked" : "Not Checked" }</p>
+                          <p>Funded Status: {task.isFunded ? "✅ Funded" : "Not Funded"}</p>
                       {!task.isCompleted && (
-                          <button onClick={() => dispatch(fetchEmployeeToDoTask(task.taskId))}
+                          <button onClick={() => handleMarkComplete(task.taskId)}
                               className="bg-gray-500 mt-2 py-1 px-2 text-white ml-10 rounded cursor-pointer">Complete Task
                           </button>)}
                       </div>

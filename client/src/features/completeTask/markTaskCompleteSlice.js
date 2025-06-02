@@ -15,7 +15,7 @@ const markTaskCompleteSlice = createSlice({
                 state.loading = true;
                 state.error = null;
             })
-            .addCase(fetchEmployeeToDoTask.fulfilled, (state, payload) => {
+            .addCase(fetchEmployeeToDoTask.fulfilled, (state, action) => {
                 state.loading = false;
                 state.completed = action.payload;
             })

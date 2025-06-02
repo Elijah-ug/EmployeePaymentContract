@@ -22,7 +22,7 @@ const employeeTaskSlice = createSlice({
             })
             .addCase(fetchAllTasksOfEmployee.rejected, (state, action) => {
                 state.loading = false;
-                state.employeeTasks = null;
+                state.employeeTasks = [];
                 state.error = action.payload;
             });
     }
