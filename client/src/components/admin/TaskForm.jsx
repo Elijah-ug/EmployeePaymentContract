@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useDispatch } from 'react-redux'
 import { createTaskThunk } from '../../features/thunks/taskThunks';
+import FundContract from './FundContract';
 
 export default function TaskForm() {
     const dispatch = useDispatch();
@@ -29,7 +30,7 @@ export default function TaskForm() {
         placeholder="Task Description"
         value={description}
         onChange={(e) => setDescription(e.target.value)}
-        className="w-full border p-2 rounded"
+        className="w-full border p-2 rounded outline-hidden"
       />
 
       <input
@@ -37,7 +38,7 @@ export default function TaskForm() {
         placeholder="Employee Address"
         value={employeeAddress}
         onChange={(e) => setEmployeeAddress(e.target.value)}
-        className="w-full border p-2 rounded"
+        className="w-full border outline-hidden p-2 rounded "
       />
 
       <input
@@ -46,13 +47,15 @@ export default function TaskForm() {
         placeholder="Amount in ETH"
         value={amount}
         onChange={(e) => setAmount(e.target.value)}
-        className="w-full border p-2 rounded"
+        className="w-full border p-2 rounded outline-hidden"
       />
 
       <button type="submit" className="cursor-pointer bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 ml-35">
         Create Task
-      </button>
-    </form>
+        </button>
+        <FundContract/>
+      </form>
+
     </div>
   )
 }
