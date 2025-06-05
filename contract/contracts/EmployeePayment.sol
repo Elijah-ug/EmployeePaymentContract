@@ -1,7 +1,7 @@
 //SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.28;
-
-contract EmployeePayment{
+pragma solidity ^0.8.20;
+import "@chainlink/contracts/src/v0.8/automation/AutomationCompatible.sol";
+contract EmployeePayment is AutomationCompatible {
 
      // task state
     struct Task{
@@ -12,6 +12,8 @@ contract EmployeePayment{
         bool isCompleted;
         bool isFunded;
         bool isChecked;
+        bool isPaid; // ✅ New field to track auto payments
+
     }
     uint256 public newTaskId;
     Task[] public tasks;
@@ -33,6 +35,9 @@ contract EmployeePayment{
     address public owner;
     uint256 public contractBalance;
     uint256 public amountAvailableForExpenditure;
+    // ✅ New: Automation config
+    uint256 public autoPayInterval = 1 days;
+    uint256 public lastAutoPayTime;
     //events
     event TaskCreated(uint256 indexed taskId, address indexed employee, uint256 amount, string description);
     event TaskCompleted(uint256 indexed taskId, address indexed employee);
@@ -40,6 +45,7 @@ contract EmployeePayment{
     event EmployeeFunded(uint256 indexed taskId, address indexed employee, uint amount);
 constructor(){
     owner = msg.sender;
+     lastAutoPayTime = block.timestamp; // ✅ Initialize lastAutoPayTime
 }
 modifier onlyOwner(){
     require(msg.sender == owner, "You're not the owner");
@@ -64,7 +70,7 @@ modifier onlyOwnerOrEmployeeLeader(){
 function createTask(string memory _description, address _employee, uint256 _amount) external onlyOwner(){
     Task memory newTask = Task({
         taskId: newTaskId, description: _description, employee: _employee,
-        amount: _amount, isCompleted: false, isFunded: false, isChecked: false});
+        amount: _amount, isCompleted: false, isFunded: false, isChecked: false, isPaid: false});
     tasks.push(newTask);
     employeeToTaskIds[_employee].push(newTaskId);
 
@@ -130,7 +136,7 @@ function fundEmployeeForTaskCompletion( uint256 taskId, uint256 _amount) externa
 //returning all tasks
 function getAllTasks() external view returns(
     uint256[] memory _ids, string[] memory _descriptions, address[] memory _employees, uint256[] memory _amounts,
-     bool[] memory _completes, bool[] memory _funded, bool[] memory _checked ){
+     bool[] memory _completes, bool[] memory _funded, bool[] memory _checked, bool[] memory _isPaid ){
         uint256 quantity = tasks.length;
         // initializing each array with the length of the parent
         _ids = new uint256[](quantity);
@@ -140,6 +146,7 @@ function getAllTasks() external view returns(
         _completes = new bool[](quantity);
         _funded = new bool[](quantity);
         _checked = new bool[](quantity);
+        _isPaid = new bool[](quantity);
 
         for(uint256 i = 0; i < quantity; i++){
             // pull out the full struct
@@ -152,14 +159,15 @@ function getAllTasks() external view returns(
             _completes[i] = task.isCompleted;
             _funded[i] = task.isFunded;
             _checked[i] = task.isChecked;
+            _isPaid[i] = task.isPaid;
         }
-    return (_ids, _descriptions, _employees, _amounts, _completes, _funded, _checked);
+    return (_ids, _descriptions, _employees, _amounts, _completes, _funded, _checked, _isPaid);
 }
 
 //returning tasks of a specific employee
 function getAllEmployeeTasks() external view returns(
     uint256[] memory _ids, string[] memory _descriptions, address[] memory _employees, uint256[] memory _amounts,
-     bool[] memory _completes, bool[] memory _funded, bool[] memory _checked ) {
+     bool[] memory _completes, bool[] memory _funded, bool[] memory _checked, bool[] memory _isPaid ) {
 
     uint256[] memory taskIds = employeeToTaskIds[msg.sender];
     uint256 quantity = taskIds.length;
@@ -171,6 +179,7 @@ function getAllEmployeeTasks() external view returns(
     _completes = new bool[](quantity);
     _funded = new bool[](quantity);
     _checked = new bool[](quantity);
+    _isPaid = new bool[](quantity);
 
     for (uint256 i = 0; i < quantity; i++) {
         Task memory task = tasks[taskIds[i]];
@@ -181,9 +190,10 @@ function getAllEmployeeTasks() external view returns(
         _completes[i] = task.isCompleted;
         _funded[i] = task.isFunded;
         _checked[i] = task.isChecked;
+        _isPaid[i] = task.isPaid;
     }
 
-    return (_ids, _descriptions, _employees, _amounts, _completes, _funded, _checked);
+    return (_ids, _descriptions, _employees, _amounts, _completes, _funded, _checked, _isPaid);
 }
 
 function getAllEmployees() external view returns(
@@ -202,6 +212,35 @@ function getAllEmployees() external view returns(
             balances[i] = emp.employeeBalances;
         }
     return (ids, addresses, balances);
+}
+
+// ✅ Allow employer to fund the contract
+    receive() external payable {}
+
+    // ======== ✅ CHAINLINK AUTOMATION HOOKS ========
+     function checkUpkeep(bytes calldata) external view override returns (bool upkeepNeeded, bytes memory) {
+    if (block.timestamp - lastAutoPayTime >= autoPayInterval) {
+        for (uint256 i = 0; i < tasks.length; i++) {
+            Task memory task = tasks[i];
+            if (task.isCompleted && !task.isPaid && address(this).balance >= task.amount) {
+                return (true, "");
+            }
+        }
+    }
+    return (false, "");
+}
+
+function performUpkeep(bytes calldata) external override {
+    require(block.timestamp - lastAutoPayTime >= autoPayInterval, "Too soon");
+    lastAutoPayTime = block.timestamp;
+
+    for (uint256 i = 0; i < tasks.length; i++) {
+        Task storage task = tasks[i];
+        if (task.isCompleted && !task.isPaid && address(this).balance >= task.amount) {
+            task.isPaid = true;
+            payable(task.employee).transfer(task.amount);
+        }
+    }
 }
 
 }
